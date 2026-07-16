@@ -12,26 +12,14 @@
 .PARAMETER SeedSampleData
   If set, creates two test clients and one recurring template each (NotifyOnly).
 
-.PARAMETER ClientId
-  Entra ID (Azure AD) app registration Application (client) ID.
-  Required by PnP.PowerShell 2.x/3.x for interactive and device login.
-  Create once: Entra admin center → App registrations → New → single-tenant,
-  then Authentication → Allow public client flows = Yes, and grant SharePoint
-  delegated permissions (AllSites.FullControl or Sites.FullControl.All) + admin consent.
-  You can also pass -ClientId or set env var PNP_CLIENT_ID / BILLING_PNP_CLIENT_ID.
-
-.PARAMETER Tenant
-  Optional tenant domain or GUID for -Interactive/-DeviceLogin (e.g. blendedlight.onmicrosoft.com).
-  Helps when the account is multi-tenant or guest.
-
-.PARAMETER LoginMode
-  Interactive (browser, default) | DeviceLogin | WebLogin (legacy, not recommended).
+.PARAMETER Interactive
+  Use interactive browser login (default). Use -DeviceLogin for headless / remote.
 
 .EXAMPLE
-  ./scripts/provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing" -ClientId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  ./scripts/provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing"
 
 .EXAMPLE
-  ./scripts/provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing" -ClientId $env:PNP_CLIENT_ID -SeedSampleData
+  ./scripts/provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing" -SeedSampleData
 #>
 [CmdletBinding()]
 param(
@@ -39,14 +27,6 @@ param(
   [string]$SiteUrl,
 
   [switch]$SeedSampleData,
-
-  [string]$ClientId = $(
-    if ($env:PNP_CLIENT_ID) { $env:PNP_CLIENT_ID }
-    elseif ($env:BILLING_PNP_CLIENT_ID) { $env:BILLING_PNP_CLIENT_ID }
-    else { $null }
-  ),
-
-  [string]$Tenant,
 
   [ValidateSet("Interactive", "DeviceLogin", "WebLogin")]
   [string]$LoginMode = "Interactive"
@@ -83,11 +63,55 @@ function Ensure-Module {
 
 function Connect-BillingSite {
   Write-Step "Connecting to $SiteUrl"
-  switch ($LoginMode) {
-    "DeviceLogin" { Connect-PnPOnline -Url $SiteUrl -DeviceLogin }
-    "WebLogin"    { Connect-PnPOnline -Url $SiteUrl -UseWebLogin }
-    default       { Connect-PnPOnline -Url $SiteUrl -Interactive }
+
+  # PnP.PowerShell 2.x/3.x removed the multi-tenant "PnP Management Shell" app.
+  # Interactive and DeviceLogin require an Entra app Client ID (public client).
+  if ($LoginMode -ne "WebLogin" -and [string]::IsNullOrWhiteSpace($ClientId)) {
+    Write-Host ""
+    Write-Host "PnP.PowerShell requires -ClientId (Entra app Application ID)." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "One-time setup (tenant admin or app creator):" -ForegroundColor Cyan
+    Write-Host "  1. https://entra.microsoft.com → Identity → Applications → App registrations → New registration"
+    Write-Host "  2. Name: Billing Platform PnP   Supported accounts: Single tenant"
+    Write-Host "  3. After create → copy Application (client) ID"
+    Write-Host "  4. Authentication → Advanced → Allow public client flows = Yes → Save"
+    Write-Host "  5. API permissions → Add → SharePoint → Delegated → AllSites.FullControl"
+    Write-Host "     (or Microsoft Graph Sites.FullControl.All if you prefer Graph-backed ops)"
+    Write-Host "  6. Grant admin consent for the tenant"
+    Write-Host ""
+    Write-Host "Then re-run:" -ForegroundColor Cyan
+    Write-Host "  ./provision.ps1 -SiteUrl `"$SiteUrl`" -ClientId `"YOUR-APP-CLIENT-ID`" -SeedSampleData"
+    Write-Host ""
+    Write-Host "Or set once per session:" -ForegroundColor Cyan
+    Write-Host "  `$env:PNP_CLIENT_ID = 'YOUR-APP-CLIENT-ID'"
+    Write-Host ""
+    throw "Missing -ClientId. See scripts/README.md (Entra app for PnP)."
   }
+
+  $connectParams = @{ Url = $SiteUrl }
+  if (-not [string]::IsNullOrWhiteSpace($ClientId)) {
+    $connectParams.ClientId = $ClientId
+  }
+  if (-not [string]::IsNullOrWhiteSpace($Tenant)) {
+    $connectParams.Tenant = $Tenant
+  }
+
+  switch ($LoginMode) {
+    "DeviceLogin" {
+      $connectParams.DeviceLogin = $true
+      Connect-PnPOnline @connectParams
+    }
+    "WebLogin" {
+      # Legacy cookie-based login — no ClientId. May be blocked by Conditional Access.
+      Write-Warn "WebLogin is legacy and may fail under modern Conditional Access."
+      Connect-PnPOnline -Url $SiteUrl -UseWebLogin
+    }
+    default {
+      $connectParams.Interactive = $true
+      Connect-PnPOnline @connectParams
+    }
+  }
+
   $web = Get-PnPWeb
   Write-Ok "Connected as site: $($web.Title) ($($web.Url))"
 }

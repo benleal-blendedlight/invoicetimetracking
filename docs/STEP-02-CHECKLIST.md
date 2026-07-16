@@ -4,7 +4,7 @@
 
 **Repo artifacts (already pushed):**
 
-- `scripts/provision.ps1`
+- `provision.ps1` (repo root) and `scripts/provision.ps1`
 - `scripts/README.md`
 - `docs/sharepoint-schema.md` (reference)
 
@@ -14,32 +14,60 @@
 
 - [ ] PowerShell available (`pwsh --version` or Windows PowerShell 5.1+)
 - [ ] You can sign in to your M365 tenant as someone who can create lists on the target site
-- [ ] You know (or will create) the site URL, e.g.  
-  `https://<tenant>.sharepoint.com/sites/Billing`
-- [ ] Repo cloned (or at least `scripts/provision.ps1` downloaded)
+- [ ] Site URL ready, e.g.  
+  `https://blendedlight.sharepoint.com/sites/InvoiceandTimeTracking`
+- [ ] Repo cloned / pulled (latest includes `-ClientId` support)
+- [ ] **Entra app Client ID** for PnP (required by PnP.PowerShell 3.x) — see A2
 
-### Create the site (if it does not exist)
+### A1. Create the site (if it does not exist)
 
 1. Go to SharePoint home → **Create site** → **Team site**
-2. Name: **Billing** (alias `Billing` is fine)
+2. Name: **Invoice and Time Tracking** (or **Billing**)
 3. Privacy: **Private**
 4. Copy the URL → paste into the run command below
+
+### A2. Entra app for PnP (one-time — fixes “valid client id” error)
+
+PnP.PowerShell 3.x no longer ships a multi-tenant login app. You must pass `-ClientId`.
+
+1. Open [Entra admin center → App registrations → New](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
+2. **Name:** `Billing Platform PnP` · **Supported accounts:** Single tenant → **Register**
+3. Copy **Application (client) ID**
+4. **Authentication** → Advanced → **Allow public client flows = Yes** → Save  
+   Optional: Add platform → Mobile and desktop → enable `https://login.microsoftonline.com/common/oauth2/nativeclient`
+5. **API permissions** → Add → **SharePoint** → Delegated → **AllSites.FullControl** → Add  
+   Then click **Grant admin consent for your tenant**
+6. No client secret needed for interactive login
+
+Full notes: [`scripts/README.md`](../scripts/README.md)
 
 ---
 
 ## B. Run provisioning
 
 ```powershell
-cd path/to/invoicetimetracking/scripts
+# If script is blocked by execution policy:
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
-# Installs PnP.PowerShell if needed, then creates everything
-./provision.ps1 -SiteUrl "https://YOUR_TENANT.sharepoint.com/sites/Billing" -SeedSampleData
+cd "path\to\invoicetimetracking"   # folder that contains provision.ps1
+git pull   # get latest -ClientId fix
+
+$env:PNP_CLIENT_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Application (client) ID
+
+./provision.ps1 `
+  -SiteUrl "https://blendedlight.sharepoint.com/sites/InvoiceandTimeTracking" `
+  -ClientId $env:PNP_CLIENT_ID `
+  -SeedSampleData
 ```
 
 Alternate login if interactive browser fails:
 
 ```powershell
-./provision.ps1 -SiteUrl "https://YOUR_TENANT.sharepoint.com/sites/Billing" -SeedSampleData -LoginMode DeviceLogin
+./provision.ps1 `
+  -SiteUrl "https://blendedlight.sharepoint.com/sites/InvoiceandTimeTracking" `
+  -ClientId $env:PNP_CLIENT_ID `
+  -SeedSampleData `
+  -LoginMode DeviceLogin
 ```
 
 ### Expected console signals

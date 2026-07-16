@@ -19,10 +19,34 @@ Idempotent PnP.PowerShell script that creates:
 ### Prerequisites
 
 1. **PowerShell 7+** recommended (`pwsh`). Windows PowerShell 5.1 often works too.
-2. **PnP.PowerShell** module (script installs to CurrentUser if missing).
+2. **PnP.PowerShell** module (script installs to CurrentUser if missing). **v3.x requires `-ClientId`.**
 3. A **SharePoint site** you can admin, e.g.  
-   `https://<tenant>.sharepoint.com/sites/Billing`
-4. Ability to consent to PnP’s Entra app on first interactive login (or use an app registration your tenant already trusts).
+   `https://blendedlight.sharepoint.com/sites/InvoiceandTimeTracking`
+4. **Your own Entra app registration** (one-time) — see below. PnP no longer ships a multi-tenant login app.
+
+### Entra app for PnP (required once)
+
+PnP.PowerShell 2.x/3.x will error with:
+
+> Please specify a valid client id for an Entra ID App Registration  
+> Specified method is not supported
+
+Create a **public client** app your user can sign into:
+
+1. Open [Entra admin center → App registrations](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) → **New registration**
+2. **Name:** `Billing Platform PnP`
+3. **Supported account types:** Accounts in this organizational directory only (single tenant)
+4. **Redirect URI:** leave blank for now → **Register**
+5. Copy **Application (client) ID** — you will pass it as `-ClientId`
+6. **Authentication** → under Advanced settings set **Allow public client flows** = **Yes** → Save  
+   (Optional but recommended: Add a platform → **Mobile and desktop applications** → enable  
+   `https://login.microsoftonline.com/common/oauth2/nativeclient`)
+7. **API permissions** → **Add a permission** → **SharePoint** → **Delegated permissions** →  
+   `AllSites.FullControl` (or at least `AllSites.Manage`) → **Add**  
+   Then **Grant admin consent for &lt;tenant&gt;**
+8. (Optional) **Owners** → add yourself so others can maintain the app
+
+You do **not** need a client secret for interactive/device login.
 
 ### Create the site (if needed)
 
@@ -87,10 +111,7 @@ Yes. Existing lists/fields/views are skipped (`--` lines). Seed items are skippe
 
 | Symptom | Fix |
 |---|---|
-| `Please specify a valid client id` / `Specified method is not supported` | Pass `-ClientId` (or `$env:PNP_CLIENT_ID`). Create the Entra app as above; enable **public client flows** |
-| `AADSTS700016` / app not found in tenant | Wrong Client ID, or app is in a different directory — check tenant |
-| `AADSTS65001` / consent required | API permissions → **Grant admin consent** |
-| `Access denied` after login | Your user needs at least **Edit** / site owner on the SharePoint site; app needs `AllSites.FullControl` delegated + consent |
+| `Connect-PnPOnline` consent / AADSTS errors | Ask a tenant admin to allow PnP.PowerShell, or register your own Entra app and use `-ClientId` (advanced) |
 | Lookup field fails | Re-run the script — lists must exist first; script order handles this |
 | Field type wrong after manual edits | Delete the field in UI (if empty) and re-run |
 | Currency shows wrong symbol | SharePoint currency fields follow **site regional settings** — set site locale/currency in Site settings |
