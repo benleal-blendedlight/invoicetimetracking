@@ -3,16 +3,17 @@
 ## Phase 0 — Foundations (½ day)
 
 - [ ] Create SharePoint site `/sites/Billing`
-- [ ] Create private GitHub repo; commit architecture pack (**Step 1**)
+- [x] Create GitHub repo; commit architecture pack (**Step 1**) — `benleal-blendedlight/invoicetimetracking`
 - [ ] Entra app registration only if planning custom SPA soon
 - [ ] Confirm Outlook + SharePoint connector access in Power Automate
 
 ## Phase 1 — Data model (1 day) → **Step 2**
 
-- [ ] Provision lists via PnP script
+- [ ] Provision lists via PnP script (`scripts/provision.ps1`)
 - [ ] Provision `Invoice PDFs` library
 - [ ] Create views (Active Clients, Due Recurring, Draft Invoices, Unbilled Time, Overdue)
 - [ ] Seed 1–2 test clients with `InvoiceTitleTemplate`
+- [ ] Follow [STEP-02-CHECKLIST.md](./STEP-02-CHECKLIST.md)
 
 ## Phase 2 — Title engine + manual invoice (1 day)
 

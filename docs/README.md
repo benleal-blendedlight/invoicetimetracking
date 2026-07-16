@@ -28,6 +28,8 @@ Clockify gaps this system closes:
 | [time-tracking.md](./time-tracking.md) | Timer model, retainers vs T&M |
 | [roadmap.md](./roadmap.md) | Phased build plan |
 | [github-layout.md](./github-layout.md) | Repo structure |
+| [STEP-01-CHECKLIST.md](./STEP-01-CHECKLIST.md) | Step 1 — GitHub bootstrap |
+| [STEP-02-CHECKLIST.md](./STEP-02-CHECKLIST.md) | Step 2 — SharePoint / PnP provision |
 
 ## Design principles
 
@@ -37,11 +39,11 @@ Clockify gaps this system closes:
 4. **SendMode is explicit** — DraftOnly / NotifyOnly / AutoSend per recurring template.
 5. **Fail loudly** — send/PDF failures set `Status = Failed` and email you.
 
-## Quick start (you are here)
+## Quick start
 
-- [ ] **Step 1** — Create empty GitHub repo and commit this pack *(this folder)*
-- [ ] **Step 2** — PnP.PowerShell script to provision SharePoint lists
-- [ ] **Step 3** — Power Automate expressions for the scheduler
+- [x] **Step 1** — GitHub repo + architecture pack  
+- [ ] **Step 2** — PnP.PowerShell provision SharePoint lists → [STEP-02-CHECKLIST.md](./STEP-02-CHECKLIST.md) · [`scripts/provision.ps1`](../scripts/provision.ps1)  
+- [ ] **Step 3** — Power Automate expressions for the scheduler  
 - [ ] **Step 4** — Optional React UI (MSAL + Graph)
 
-See the root [README.md](../README.md) for repo bootstrap commands.
+See the root [README.md](../README.md) for progress and bootstrap notes.

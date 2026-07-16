@@ -51,32 +51,27 @@ Full layout notes: [docs/github-layout.md](docs/github-layout.md)
 
 ---
 
-## Step 1 — Create the GitHub repo and push this pack
+## Progress
 
-You confirmed you have a GitHub account but **no repo yet**. Do this once:
+| Step | Status | What |
+|---|---|---|
+| **1** | Done | Architecture pack on GitHub (`benleal-blendedlight/invoicetimetracking`) |
+| **2** | **You now** | Provision SharePoint with PnP — [`docs/STEP-02-CHECKLIST.md`](docs/STEP-02-CHECKLIST.md) |
+| **3** | Next | Power Automate scheduler expressions |
+| **4** | Later | Optional React UI (MSAL + Graph) |
 
-### A. Create the empty repo on GitHub
+### Step 2 quick start
 
-1. Open [https://github.com/new](https://github.com/new)
-2. **Repository name:** `billing-platform` (or `clockify-replacement` — your choice)
-3. **Description:** `M365 billing & time tracking — SharePoint + Power Automate`
-4. Set to **Private** (recommended — client names and billing data will live nearby in docs/examples)
-5. **Do not** add a README, .gitignore, or license (this pack already has a README)
-6. Click **Create repository**
-
-### B. Push from a local folder
-
-Copy the contents of this project’s docs export into a local folder, then:
-
-```bash
-# from the folder that contains README.md and docs/
-git init
-git add README.md docs/
-git commit -m "docs: add architecture pack (SharePoint, flows, title templates)"
-git branch -M main
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/billing-platform.git
-git push -u origin main
+```powershell
+cd scripts
+./provision.ps1 -SiteUrl "https://YOUR_TENANT.sharepoint.com/sites/Billing" -SeedSampleData
 ```
+
+Full checklist: [`docs/STEP-02-CHECKLIST.md`](docs/STEP-02-CHECKLIST.md) · Script notes: [`scripts/README.md`](scripts/README.md)
+
+### Step 1 (completed)
+
+Repo: https://github.com/benleal-blendedlight/invoicetimetracking
 
 Replace `<YOUR_GITHUB_USERNAME>` and the repo name if you chose differently.
 

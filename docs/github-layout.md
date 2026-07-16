@@ -47,11 +47,11 @@ billing-platform/
 - `main` — protected when you add automation  
 - Feature branches optional; single-operator can commit to `main` for docs
 
-## Step 1 scope
+## Scope by step
 
-For Step 1, only these need to exist in the remote repo:
-
-- `README.md`
-- `docs/**` (this pack)
-
-Folders `sharepoint/`, `scripts/`, `power-automate/`, `templates/`, `app/` are created in later steps.
+| Step | Paths in repo |
+|---|---|
+| **1** (done) | `README.md`, `docs/**` |
+| **2** (now) | `scripts/provision.ps1`, `scripts/README.md`, `sharepoint/lists/README.md`, `docs/STEP-02-CHECKLIST.md` |
+| **3** | `power-automate/expressions/**`, flow export zips |
+| **4** | `app/**` optional SPA |
