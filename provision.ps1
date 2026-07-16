@@ -9,22 +9,33 @@
 .PARAMETER SiteUrl
   Full SharePoint site URL, e.g. https://contoso.sharepoint.com/sites/Billing
 
+.PARAMETER ClientId
+  Entra app Application (client) ID. Required by PnP.PowerShell 3.x for Interactive/DeviceLogin.
+  Falls back to env var PNP_CLIENT_ID if omitted.
+
+.PARAMETER Tenant
+  Optional tenant domain or ID, e.g. blendedlight.onmicrosoft.com
+
 .PARAMETER SeedSampleData
   If set, creates two test clients and one recurring template each (NotifyOnly).
 
-.PARAMETER Interactive
-  Use interactive browser login (default). Use -DeviceLogin for headless / remote.
+.PARAMETER LoginMode
+  Interactive (default), DeviceLogin, or WebLogin (legacy).
 
 .EXAMPLE
-  ./scripts/provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing"
+  ./provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing" -ClientId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
 .EXAMPLE
-  ./scripts/provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing" -SeedSampleData
+  ./provision.ps1 -SiteUrl "https://contoso.sharepoint.com/sites/Billing" -ClientId $env:PNP_CLIENT_ID -SeedSampleData
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
   [string]$SiteUrl,
+
+  [string]$ClientId = $env:PNP_CLIENT_ID,
+
+  [string]$Tenant,
 
   [switch]$SeedSampleData,
 
