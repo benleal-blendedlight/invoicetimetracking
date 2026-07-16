@@ -1,0 +1,29 @@
+# Env / secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# M365 / local tooling
+*.pfx
+*.p12
+.connect/
+.pnp/
+
+# Real invoice PDFs if ever dropped in tree
+templates/**/*.pdf
+power-automate/exports/**/*secret*
+
+# Node (later app/)
+node_modules/
+dist/
+build/
