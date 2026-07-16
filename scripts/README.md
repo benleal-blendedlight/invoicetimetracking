@@ -87,7 +87,10 @@ Yes. Existing lists/fields/views are skipped (`--` lines). Seed items are skippe
 
 | Symptom | Fix |
 |---|---|
-| `Connect-PnPOnline` consent / AADSTS errors | Ask a tenant admin to allow PnP.PowerShell, or register your own Entra app and use `-ClientId` (advanced) |
+| `Please specify a valid client id` / `Specified method is not supported` | Pass `-ClientId` (or `$env:PNP_CLIENT_ID`). Create the Entra app as above; enable **public client flows** |
+| `AADSTS700016` / app not found in tenant | Wrong Client ID, or app is in a different directory — check tenant |
+| `AADSTS65001` / consent required | API permissions → **Grant admin consent** |
+| `Access denied` after login | Your user needs at least **Edit** / site owner on the SharePoint site; app needs `AllSites.FullControl` delegated + consent |
 | Lookup field fails | Re-run the script — lists must exist first; script order handles this |
 | Field type wrong after manual edits | Delete the field in UI (if empty) and re-run |
 | Currency shows wrong symbol | SharePoint currency fields follow **site regional settings** — set site locale/currency in Site settings |
