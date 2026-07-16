@@ -2,7 +2,7 @@
 
 **Goal:** Lists, library, views, and seed data exist on your M365 tenant so flows (Step 3) have a schema to target.
 
-**Repo artifacts (already pushed):**
+**Repo artifacts:**
 
 - `provision.ps1` (repo root) and `scripts/provision.ps1`
 - `scripts/README.md`
@@ -13,44 +13,50 @@
 ## A. Before you run the script
 
 - [ ] PowerShell available (`pwsh --version` or Windows PowerShell 5.1+)
-- [ ] You can sign in to your M365 tenant as someone who can create lists on the target site
-- [ ] Site URL ready, e.g.  
+- [ ] You can sign in to M365 as someone who can create lists on the target site
+- [ ] Site URL ready:  
   `https://blendedlight.sharepoint.com/sites/InvoiceandTimeTracking`
-- [ ] Repo cloned / pulled (latest includes `-ClientId` support)
-- [ ] **Entra app Client ID** for PnP (required by PnP.PowerShell 3.x) — see A2
+- [ ] Repo cloned / pulled (must include `-ClientId` support)
+- [ ] **Entra app Client ID** for PnP (required by PnP.PowerShell 3.x) — section A2
 
 ### A1. Create the site (if it does not exist)
 
-1. Go to SharePoint home → **Create site** → **Team site**
+1. SharePoint home → **Create site** → **Team site**
 2. Name: **Invoice and Time Tracking** (or **Billing**)
 3. Privacy: **Private**
-4. Copy the URL → paste into the run command below
+4. Copy the URL
 
-### A2. Entra app for PnP (one-time — fixes “valid client id” error)
+### A2. Entra app for PnP (one-time)
 
-PnP.PowerShell 3.x no longer ships a multi-tenant login app. You must pass `-ClientId`.
+PnP 3.x without `-ClientId` errors with:
 
-1. Open [Entra admin center → App registrations → New](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
-2. **Name:** `Billing Platform PnP` · **Supported accounts:** Single tenant → **Register**
-3. Copy **Application (client) ID**
-4. **Authentication** → Advanced → **Allow public client flows = Yes** → Save  
-   Optional: Add platform → Mobile and desktop → enable `https://login.microsoftonline.com/common/oauth2/nativeclient`
-5. **API permissions** → Add → **SharePoint** → Delegated → **AllSites.FullControl** → Add  
-   Then click **Grant admin consent for your tenant**
-6. No client secret needed for interactive login
+> Please specify a valid client id for an Entra ID App Registration  
+> Specified method is not supported
 
-Full notes: [`scripts/README.md`](../scripts/README.md)
+1. [Entra → App registrations → New](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
+2. Name **Billing Platform PnP**, single-tenant → Register
+3. Copy **Application (client) ID** from Overview
+4. **Allow public client flows** — Entra’s **Authentication (Preview)** often hides “Advanced”:
+   - Click banner **“switch to the old experience”** → Advanced → **Allow public client flows = Yes**, **or**
+   - Authentication → **Settings** tab → enable public client flows, **or**
+   - **Manifest** → `"allowPublicClient": true` → Save
+5. **+ Add Redirect URI** → **Mobile and desktop** → enable  
+   `https://login.microsoftonline.com/common/oauth2/nativeclient` (and/or `http://localhost`)
+6. **API permissions** → SharePoint → Delegated → **AllSites.FullControl** →  
+   **Grant admin consent for your tenant**
+7. No client secret needed
+
+Full detail: [`scripts/README.md`](../scripts/README.md)
 
 ---
 
 ## B. Run provisioning
 
 ```powershell
-# If script is blocked by execution policy:
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
-cd "path\to\invoicetimetracking"   # folder that contains provision.ps1
-git pull   # get latest -ClientId fix
+cd "C:\Users\BenLeal\OneDrive - BlendedLight LLC\Clients\BlendedLight\invoicetimetracking"
+git pull
 
 $env:PNP_CLIENT_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Application (client) ID
 
@@ -60,7 +66,7 @@ $env:PNP_CLIENT_ID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Application (clie
   -SeedSampleData
 ```
 
-Alternate login if interactive browser fails:
+If interactive browser login fails:
 
 ```powershell
 ./provision.ps1 `
@@ -85,7 +91,7 @@ Open the site → **Site contents**. Confirm:
 
 | Artifact | Check |
 |---|---|
-| Clients | List present; columns include ClientCode, InvoiceTitleTemplate, BillingEmail |
+| Clients | List present; ClientCode, InvoiceTitleTemplate, BillingEmail |
 | Projects | Lookup column **Client** |
 | Time Entries | Start/End, Billable, Invoice lookup |
 | Recurring Invoices | Amount, SendMode, NextRunDate, Active |
@@ -93,55 +99,50 @@ Open the site → **Site contents**. Confirm:
 | Invoice Lines | Quantity, UnitPrice, Amount, Invoice lookup |
 | Invoice PDFs | Document library |
 
-**Views** (open each list → view dropdown):
+**Views:**
 
 - [ ] Clients → **Active Clients**
 - [ ] Recurring Invoices → **Due Recurring**, **Active Templates**
 - [ ] Invoices → **Draft Invoices**, **Sent**, **Overdue**, **Failed**
 - [ ] Time Entries → **Unbilled Time**, **Running**
 
-**Seed data** (if you used `-SeedSampleData`):
+**Seed data** (if `-SeedSampleData`):
 
 - [ ] Clients: Acme Consulting Ltd + Northwind Traders
 - [ ] Different `InvoiceTitleTemplate` on each
 - [ ] Two Recurring Invoices, SendMode = NotifyOnly
-- [ ] `BillingEmail` still example.com → **change to your test mailbox** before any AutoSend
+- [ ] Change seed **Billing Email** to a mailbox **you** control before any AutoSend
 
 ---
 
 ## D. Manual polish (5 minutes)
 
-- [ ] Site settings → **Regional settings**: currency/locale match how you invoice (e.g. United Kingdom for GBP)
-- [ ] Update seed client **Billing Email** to an address you control
-- [ ] Optional: pin the six lists to the site navigation if Quick Launch is messy
-- [ ] Optional: create folder `templates` in Invoice PDFs for future Word templates (not required yet)
+- [ ] Site settings → **Regional settings**: currency/locale for how you invoice
+- [ ] Update seed client billing emails
+- [ ] Optional: pin lists on Quick Launch
 
 ---
 
 ## E. Report back
 
-Reply with something like:
-
 ```
 Step 2 complete
-Site: https://….sharepoint.com/sites/Billing
+Site: https://blendedlight.sharepoint.com/sites/InvoiceandTimeTracking
 Seed: yes/no
 Issues: none | <short description>
 ```
 
-Paste any red error lines from the script if something failed — I’ll help fix and we can re-run (script is safe to re-run).
+Paste red error lines if something failed (no secrets). Script is safe to re-run.
 
 ---
 
 ## Out of scope for Step 2
 
 - Power Automate flows → **Step 3**
-- PDF Word template → later in Phase 2
+- PDF Word template → later
 - Custom React UI → Step 4
 
----
+## Rollback
 
-## Rollback (only if you want a clean slate)
-
-Delete the six lists + Invoice PDFs library from Site contents, then re-run `provision.ps1`.  
+Delete the six lists + Invoice PDFs from Site contents, then re-run `provision.ps1`.  
 **Do not** delete a production site with real data.
