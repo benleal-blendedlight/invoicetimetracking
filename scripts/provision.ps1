@@ -249,8 +249,14 @@ function Ensure-ChoiceField {
     Choices      = $Choices
     Required     = $Required
   }
-  if ($Default) { $params.Add("Default", $Default) }
   Add-PnPField @params | Out-Null
+  # Add-PnPField has no -Default; set the default value after creation.
+  if ($Default) {
+    try {
+      Set-PnPField -List $ListTitle -Identity $InternalName -Values @{ DefaultValue = $Default } -ErrorAction SilentlyContinue | Out-Null
+    }
+    catch { }
+  }
   Write-Ok "$ListTitle.$InternalName ($DisplayName)"
 }
 
