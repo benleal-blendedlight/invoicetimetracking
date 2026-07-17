@@ -344,7 +344,9 @@ function Ensure-LookupField {
     return
   }
   $lookupList = Get-PnPList -Identity $LookupListTitle
-  Add-PnPField -List $ListTitle -DisplayName $DisplayName -InternalName $InternalName -Type Lookup -LookupList $lookupList.Id -LookupField $LookupField -Required:$Required | Out-Null
+  $reqAttr = if ($Required) { 'Required="TRUE"' } else { 'Required="FALSE"' }
+  $fieldXml = "<Field Type='Lookup' DisplayName='$DisplayName' Name='$InternalName' StaticName='$InternalName' List='{$($lookupList.Id)}' ShowField='$LookupField' $reqAttr />"
+  Add-PnPFieldFromXml -List $ListTitle -FieldXml $fieldXml | Out-Null
   Write-Ok "$ListTitle.$InternalName → $LookupListTitle"
 }
 
