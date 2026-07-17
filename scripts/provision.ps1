@@ -559,16 +559,23 @@ Ensure-View -ListTitle "Invoices" -ViewTitle "Failed" -Query @"
 if ($SeedSampleData) {
   Write-Step "Seeding sample clients + recurring templates"
 
+  # Resolve target lists to GUIDs so Add/Get-PnPListItem can't mis-resolve the
+  # "Clients" title to the site-root path (which SharePoint treats as a library).
+  $clientsList = Get-PnPList -Identity "Clients"
+  $recurringList = Get-PnPList -Identity "Recurring Invoices"
+  $clientsId = $clientsList.Id.ToString()
+  $recurringId = $recurringList.Id.ToString()
+
   function Get-ItemIdByTitle {
-    param([string]$ListTitle, [string]$Title)
-    $items = Get-PnPListItem -List $ListTitle -PageSize 500 | Where-Object { $_.FieldValues.Title -eq $Title }
+    param([string]$ListId, [string]$Title)
+    $items = Get-PnPListItem -List $ListId -PageSize 500 | Where-Object { $_.FieldValues.Title -eq $Title }
     if ($items) { return $items[0].Id }
     return $null
   }
 
-  $acmeId = Get-ItemIdByTitle -ListTitle "Clients" -Title "Acme Consulting Ltd"
+  $acmeId = Get-ItemIdByTitle -ListId $clientsId -Title "Acme Consulting Ltd"
   if (-not $acmeId) {
-    $acme = Add-PnPListItem -List "Clients" -Values @{
+    $acme = Add-PnPListItem -List $clientsId -Values @{
       Title                 = "Acme Consulting Ltd"
       ClientCode            = "ACME"
       BillingEmail          = "billing@example.com"
@@ -587,9 +594,9 @@ if ($SeedSampleData) {
     Write-Skip "Client Acme Consulting Ltd already exists (Id=$acmeId)"
   }
 
-  $nwtId = Get-ItemIdByTitle -ListTitle "Clients" -Title "Northwind Traders"
+  $nwtId = Get-ItemIdByTitle -ListId $clientsId -Title "Northwind Traders"
   if (-not $nwtId) {
-    $nwt = Add-PnPListItem -List "Clients" -Values @{
+    $nwt = Add-PnPListItem -List $clientsId -Values @{
       Title                 = "Northwind Traders"
       ClientCode            = "NWT"
       BillingEmail          = "ap@example.com"
@@ -610,9 +617,9 @@ if ($SeedSampleData) {
 
   $tomorrow = (Get-Date).Date.AddDays(1).ToString("yyyy-MM-dd")
 
-  $rec1 = Get-ItemIdByTitle -ListTitle "Recurring Invoices" -Title "Acme monthly retainer"
+  $rec1 = Get-ItemIdByTitle -ListId $recurringId -Title "Acme monthly retainer"
   if (-not $rec1) {
-    Add-PnPListItem -List "Recurring Invoices" -Values @{
+    Add-PnPListItem -List $recurringId -Values @{
       Title            = "Acme monthly retainer"
       Client           = $acmeId
       Amount           = 2500
@@ -630,9 +637,9 @@ if ($SeedSampleData) {
     Write-Skip "Recurring Acme monthly retainer exists"
   }
 
-  $rec2 = Get-ItemIdByTitle -ListTitle "Recurring Invoices" -Title "Northwind monthly services"
+  $rec2 = Get-ItemIdByTitle -ListId $recurringId -Title "Northwind monthly services"
   if (-not $rec2) {
-    Add-PnPListItem -List "Recurring Invoices" -Values @{
+    Add-PnPListItem -List $recurringId -Values @{
       Title            = "Northwind monthly services"
       Client           = $nwtId
       Amount           = 1800
